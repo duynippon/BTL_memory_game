@@ -224,5 +224,8 @@ class Game:
 
     def get_video(self):
         self.cap = cv2.VideoCapture("video/earth.mp4")
+        fps = self.cap.get(cv2.CAP_PROP_FPS)
         self.success, self.img = self.cap.read()
-        self.shape = self.img.shape[1::-1]
+
+        # Điều chỉnh thời gian chờ để duy trì đúng tốc độ khung hình
+        self.frame_duration = int(1000 / fps)  # thời gian chờ trong milisecond
