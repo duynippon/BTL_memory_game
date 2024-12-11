@@ -1,5 +1,6 @@
 import os
 import random
+import time
 
 import cv2
 import pygame
@@ -25,7 +26,7 @@ class Game:
         self.level = 1
         self.level_complete = False
 
-        # aliens
+        # aliens cute pho mai que
         self.all_aliens = [
             f for f in os.listdir("images/aliens") if os.path.join("images/aliens", f)
         ]
@@ -39,15 +40,15 @@ class Game:
 
         self.tiles_group = pygame.sprite.Group()
 
-        # flipping & timing
+        # thoi gian lat bai va quay cai la bai
         self.flipped = []
         self.frame_count = 0
         self.block_game = False
 
-        # generate first level
+        # tao ra level dau tien
         self.generate_level(self.level)
 
-        # initialize video
+        # tai video len ne
         self.is_video_playing = True
         self.play = pygame.image.load("images/play.png").convert_alpha()
         self.stop = pygame.image.load("images/stop.png").convert_alpha()
@@ -57,7 +58,7 @@ class Game:
         )
         self.get_video()
 
-        # initialize music
+        # lam nhac nheo do nghe cho no da
         self.is_music_playing = True
         self.sound_on = pygame.image.load("images/speaker.png").convert_alpha()
         self.sound_off = pygame.image.load("images/mute.png").convert_alpha()
@@ -66,7 +67,12 @@ class Game:
             topright=(WINDOW_WIDTH - 10, 10)
         )
 
-        # load music
+        # Time
+        self.TIMER_DURATION = 300
+        self.start_time = time.time()
+        # ve thoi gian ne
+        self.draw_timer()
+        # chieu nhac len cho nghe ne
         pygame.mixer.music.load("sounds/nhac_10p_sieu_cute_HIHI.mp3")
         pygame.mixer.music.set_volume(0.3)
         pygame.mixer.music.play()
@@ -139,7 +145,10 @@ class Game:
 
     def user_input(self, event_list):
         for event in event_list:
+            # event.button ==1 co nghia la chi lay chuot trai th chuot phai ko dung
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # su dung ham côliidepoint de lay dung toa do cua cai rect dang can
+                # nguyen  cai if nay ne  cai nay la khi bam am thanh thi no tat ne va thay doi hinh anh
                 if self.music_toggle_rect.collidepoint(pygame.mouse.get_pos()):
                     if self.is_music_playing:
                         self.is_music_playing = False
@@ -164,22 +173,38 @@ class Game:
                         self.level = 1
                     self.generate_level(self.level)
 
+    def draw_timer(self):
+        elapsed_time = int(time.time() - self.start_time)
+        remaining_time = max(0, self.TIMER_DURATION - elapsed_time)
+        font_time = pygame.font.Font(os.path.join("fonts", "Little Alien.ttf"), 30)
+        minutes, seconds = divmod(remaining_time, 60)
+        timer_text = font_time.render(
+            f"{minutes:02}:{seconds:02}", True, goi_ham_dinh_nghia.RED
+        )
+        screen.blit(timer_text, (10, 10))
+
     def draw(self):
-        screen.fill(BLACK)
+
+        screen.fill(goi_ham_dinh_nghia.BLACK)
+        self.draw_timer()
 
         # fonts
         title_font = pygame.font.Font("fonts/Little Alien.ttf", 44)
         content_font = pygame.font.Font("fonts/Little Alien.ttf", 24)
 
         # text
-        title_text = title_font.render("BTL_CKT_laptrinh", True, WHITE)
+        title_text = title_font.render(
+            "BTL_CKT_laptrinh", True, goi_ham_dinh_nghia.WHITE
+        )
         title_rect = title_text.get_rect(midtop=(WINDOW_WIDTH // 2, 10))
 
-        level_text = content_font.render("Level " + str(self.level), True, WHITE)
+        level_text = content_font.render(
+            "Level " + str(self.level), True, goi_ham_dinh_nghia.WHITE
+        )
         level_rect = level_text.get_rect(midtop=(WINDOW_WIDTH // 2, 80))
 
         info_text = content_font.render(
-            "chon 2 cai giong nhau cho den khi het hinh", True, WHITE
+            "chon 2 cai giong nhau cho den khi het hinh", True, goi_ham_dinh_nghia.WHITE
         )
         info_rect = info_text.get_rect(midtop=(WINDOW_WIDTH // 2, 120))
 
@@ -198,11 +223,13 @@ class Game:
 
         if self.level != 5:
             next_text = content_font.render(
-                "len level . hay bam SPACE de qua man", True, WHITE
+                "len level . hay bam SPACE de qua man", True, goi_ham_dinh_nghia.WHITE
             )
         else:
             next_text = content_font.render(
-                "thang roi !!! hay nhan space de choi lai level 1 ", True, WHITE
+                "thang roi !!! hay nhan space de choi lai level 1 ",
+                True,
+                goi_ham_dinh_nghia.WHITE,
             )
         next_rect = next_text.get_rect(
             midbottom=(WINDOW_WIDTH // 2, WINDOW_HEIGHT - 40)
@@ -211,7 +238,9 @@ class Game:
         screen.blit(title_text, title_rect)
         screen.blit(level_text, level_rect)
         screen.blit(info_text, info_rect)
-        pygame.draw.rect(screen, WHITE, (WINDOW_WIDTH - 90, 0, 100, 50))
+        pygame.draw.rect(
+            screen, goi_ham_dinh_nghia.WHITE, (WINDOW_WIDTH - 90, 0, 100, 50)
+        )
         screen.blit(self.video_toggle, self.video_toggle_rect)
         screen.blit(self.music_toggle, self.music_toggle_rect)
 
@@ -222,6 +251,8 @@ class Game:
         if self.level_complete:
             screen.blit(next_text, next_rect)
 
+    # module video cua pygame no ko con nua
+    # nen la dung cv2 nen la muon sai thi phai tai no ve va dung theo quy cach dac biet cua no
     def get_video(self):
         self.cap = cv2.VideoCapture("video/earth.mp4")
         self.success, self.img = self.cap.read()
